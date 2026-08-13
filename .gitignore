@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+
+# Local runtime data
+performance.log
+settings.json
+Models/
+
+# User-specific tooling files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Installer/build outputs
+installer/*.exe
+installer/*.msi

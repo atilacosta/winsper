@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsDictation.Core", "src\WindowsDictation.Core\WindowsDictation.Core.csproj", "{1A4C8E44-F3C0-44C6-9479-F2EC5D31BB65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsDictation.App", "src\WindowsDictation.App\WindowsDictation.App.csproj", "{8F72C3E8-B28F-4A2D-9012-32F682488B2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsDictation.Core.Tests", "tests\WindowsDictation.Core.Tests\WindowsDictation.Core.Tests.csproj", "{C18E2E3D-09D7-4FDE-9510-C40B23207B8E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A4C8E44-F3C0-44C6-9479-F2EC5D31BB65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A4C8E44-F3C0-44C6-9479-F2EC5D31BB65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A4C8E44-F3C0-44C6-9479-F2EC5D31BB65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A4C8E44-F3C0-44C6-9479-F2EC5D31BB65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F72C3E8-B28F-4A2D-9012-32F682488B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F72C3E8-B28F-4A2D-9012-32F682488B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F72C3E8-B28F-4A2D-9012-32F682488B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F72C3E8-B28F-4A2D-9012-32F682488B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C18E2E3D-09D7-4FDE-9510-C40B23207B8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C18E2E3D-09D7-4FDE-9510-C40B23207B8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C18E2E3D-09D7-4FDE-9510-C40B23207B8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C18E2E3D-09D7-4FDE-9510-C40B23207B8E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

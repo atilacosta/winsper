@@ -27,5 +27,10 @@ public sealed class HotkeySettings
 
 public enum IndicatorPosition
 {
-    TopCenter
+    TopCenter,
+    TopLeft,
+    TopRight,
+    BottomCenter,
+    BottomLeft,
+    BottomRight
 }

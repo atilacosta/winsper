@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using WindowsDictation.Core;
 
 namespace WindowsDictation.App.Windows;
@@ -9,37 +10,60 @@ public partial class OverlayWindow : Window
     public OverlayWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => PositionTopCenter();
+        Loaded += (_, _) => PositionIndicator();
     }
 
     public void ShowState(RecordingState state, string? message)
     {
-        StateText.Text = state switch
-        {
-            RecordingState.Idle => "Ready",
-            RecordingState.Recording => "Recording",
-            RecordingState.Transcribing => "Transcribing",
-            RecordingState.Inserting => "Pasting",
-            RecordingState.Error => "Needs attention",
-            _ => state.ToString()
-        };
-
-        MessageText.Text = string.IsNullOrWhiteSpace(message) ? "Ctrl+Space" : message;
         StateDot.Fill = new SolidColorBrush(ColorFor(state));
         Opacity = state == RecordingState.Idle ? 0.72 : 0.96;
+        ApplyAnimation(state);
 
         if (!IsVisible)
         {
             Show();
         }
 
-        PositionTopCenter();
+        PositionIndicator();
     }
 
-    private void PositionTopCenter()
+    public void SetPosition(IndicatorPosition position)
     {
-        Left = SystemParameters.WorkArea.Left + (SystemParameters.WorkArea.Width - Width) / 2;
-        Top = SystemParameters.WorkArea.Top + 16;
+        Tag = position;
+        PositionIndicator();
+    }
+
+    private void PositionIndicator()
+    {
+        IndicatorPosition position = Tag is IndicatorPosition configured
+            ? configured
+            : IndicatorPosition.TopCenter;
+        Rect workArea = SystemParameters.WorkArea;
+        double margin = 18;
+
+        Left = position switch
+        {
+            IndicatorPosition.TopLeft or IndicatorPosition.BottomLeft => workArea.Left + margin,
+            IndicatorPosition.TopRight or IndicatorPosition.BottomRight => workArea.Right - Width - margin,
+            _ => workArea.Left + (workArea.Width - Width) / 2
+        };
+        Top = position switch
+        {
+            IndicatorPosition.BottomCenter or IndicatorPosition.BottomLeft or IndicatorPosition.BottomRight
+                => workArea.Bottom - Height - margin,
+            _ => workArea.Top + margin
+        };
+    }
+
+    private void ApplyAnimation(RecordingState state)
+    {
+        if (FindResource("DotPulse") is not Storyboard storyboard)
+        {
+            return;
+        }
+
+        storyboard.Remove(this);
+        storyboard.Begin(this, true);
     }
 
     private static System.Windows.Media.Color ColorFor(RecordingState state)
@@ -53,5 +77,6 @@ public partial class OverlayWindow : Window
             _ => System.Windows.Media.Color.FromRgb(125, 211, 252)
         };
     }
+
 }
 

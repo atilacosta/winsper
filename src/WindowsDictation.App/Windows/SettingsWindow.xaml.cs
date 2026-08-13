@@ -12,19 +12,22 @@ public partial class SettingsWindow : Window
     private readonly IModelManager modelManager;
     private readonly GlobalHotkeyService hotkeyService;
     private readonly StartupRegistrationService startupRegistration;
+    private readonly OverlayWindow overlayWindow;
 
     public SettingsWindow(
         ISettingsStore settingsStore,
         AudioDeviceCatalog audioDeviceCatalog,
         IModelManager modelManager,
         GlobalHotkeyService hotkeyService,
-        StartupRegistrationService startupRegistration)
+        StartupRegistrationService startupRegistration,
+        OverlayWindow overlayWindow)
     {
         this.settingsStore = settingsStore;
         this.audioDeviceCatalog = audioDeviceCatalog;
         this.modelManager = modelManager;
         this.hotkeyService = hotkeyService;
         this.startupRegistration = startupRegistration;
+        this.overlayWindow = overlayWindow;
 
         InitializeComponent();
         Loaded += (_, _) => Populate();
@@ -49,6 +52,17 @@ public partial class SettingsWindow : Window
             new ComboOption<InsertionMode>("Unicode injection only", InsertionMode.UnicodeOnly)
         };
         InsertionModeComboBox.SelectedValue = settings.InsertionMode;
+
+        IndicatorPositionComboBox.ItemsSource = new[]
+        {
+            new ComboOption<IndicatorPosition>("Top center", IndicatorPosition.TopCenter),
+            new ComboOption<IndicatorPosition>("Top left", IndicatorPosition.TopLeft),
+            new ComboOption<IndicatorPosition>("Top right", IndicatorPosition.TopRight),
+            new ComboOption<IndicatorPosition>("Bottom center", IndicatorPosition.BottomCenter),
+            new ComboOption<IndicatorPosition>("Bottom left", IndicatorPosition.BottomLeft),
+            new ComboOption<IndicatorPosition>("Bottom right", IndicatorPosition.BottomRight)
+        };
+        IndicatorPositionComboBox.SelectedValue = settings.IndicatorPosition;
 
         ControlCheckBox.IsChecked = settings.Hotkey.Control;
         AltCheckBox.IsChecked = settings.Hotkey.Alt;
@@ -85,7 +99,9 @@ public partial class SettingsWindow : Window
             InsertionMode = InsertionModeComboBox.SelectedValue is InsertionMode mode
                 ? mode
                 : InsertionMode.ClipboardPasteThenUnicodeFallback,
-            IndicatorPosition = current.IndicatorPosition,
+            IndicatorPosition = IndicatorPositionComboBox.SelectedValue is IndicatorPosition position
+                ? position
+                : current.IndicatorPosition,
             LaunchOnStartup = LaunchOnStartupCheckBox.IsChecked == true
         };
 
@@ -94,6 +110,7 @@ public partial class SettingsWindow : Window
             hotkeyService.Register(settings.Hotkey);
             startupRegistration.Apply(settings.LaunchOnStartup);
             await settingsStore.SaveAsync(settings, CancellationToken.None);
+            overlayWindow.SetPosition(settings.IndicatorPosition);
             Close();
         }
         catch (Win32Exception exception)

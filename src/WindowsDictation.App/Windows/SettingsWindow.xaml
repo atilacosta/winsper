@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Windows Dictation Settings"
         Width="440"
-        Height="430"
+        Height="500"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="18">
@@ -17,8 +17,9 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="16" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="16" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <StackPanel>
@@ -71,12 +72,21 @@
             </DockPanel>
         </StackPanel>
 
+        <StackPanel Grid.Row="8">
+            <TextBlock Text="Indicator position" FontWeight="SemiBold" />
+            <ComboBox x:Name="IndicatorPositionComboBox"
+                      Margin="0,6,0,0"
+                      DisplayMemberPath="Label"
+                      SelectedValuePath="Value"
+                      MinHeight="32" />
+        </StackPanel>
+
         <CheckBox x:Name="LaunchOnStartupCheckBox"
-                  Grid.Row="8"
+                  Grid.Row="10"
                   Content="Launch on startup"
                   VerticalAlignment="Center" />
 
-        <DockPanel Grid.Row="10" LastChildFill="False">
+        <DockPanel Grid.Row="12" LastChildFill="False">
             <Button Content="Cancel"
                     Width="92"
                     MinHeight="32"

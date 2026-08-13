@@ -40,6 +40,7 @@ public partial class App : System.Windows.Application
         });
 
         overlayWindow = serviceProvider.GetRequiredService<OverlayWindow>();
+        overlayWindow.SetPosition(settingsStore.Current.IndicatorPosition);
         overlayWindow.ShowState(RecordingState.Idle, "Ready");
 
         IRecordingController controller = serviceProvider.GetRequiredService<IRecordingController>();

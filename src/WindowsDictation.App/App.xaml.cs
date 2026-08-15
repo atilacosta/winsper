@@ -47,7 +47,22 @@ public partial class App : System.Windows.Application
         controller.StateChanged += (_, args) => Dispatcher.Invoke(() => overlayWindow.ShowState(args.State, args.Message));
 
         hotkeyService = serviceProvider.GetRequiredService<GlobalHotkeyService>();
-        hotkeyService.HotkeyPressed += async (_, _) => await controller.ToggleAsync();
+        hotkeyService.HotkeyPressed += async (_, _) =>
+        {
+            RecordingResult result = await controller.ToggleAsync();
+            if (result.Action == RecordingAction.Completed && !string.IsNullOrWhiteSpace(result.Transcript))
+            {
+                try
+                {
+                    await serviceProvider.GetRequiredService<ITranscriptionHistoryStore>()
+                        .AddAsync(result.Transcript, CancellationToken.None);
+                }
+                catch
+                {
+                    // History is a convenience feature and must not affect dictation.
+                }
+            }
+        };
         try
         {
             hotkeyService.Register(settingsStore.Current.Hotkey);
@@ -80,6 +95,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<AppPaths>();
         services.AddSingleton<PerformanceMetricsLogger>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
+        services.AddSingleton<ITranscriptionHistoryStore, TranscriptionHistoryStore>();
         services.AddSingleton<IAppSettingsProvider>(sp => sp.GetRequiredService<ISettingsStore>());
         services.AddSingleton<IAudioCaptureService, WaveInAudioCaptureService>();
         services.AddSingleton<IModelManager, WhisperNetModelManager>();

@@ -13,6 +13,7 @@ public partial class SettingsWindow : Window
     private readonly GlobalHotkeyService hotkeyService;
     private readonly StartupRegistrationService startupRegistration;
     private readonly OverlayWindow overlayWindow;
+    private readonly ITranscriptionHistoryStore transcriptionHistory;
 
     public SettingsWindow(
         ISettingsStore settingsStore,
@@ -20,7 +21,8 @@ public partial class SettingsWindow : Window
         IModelManager modelManager,
         GlobalHotkeyService hotkeyService,
         StartupRegistrationService startupRegistration,
-        OverlayWindow overlayWindow)
+        OverlayWindow overlayWindow,
+        ITranscriptionHistoryStore transcriptionHistory)
     {
         this.settingsStore = settingsStore;
         this.audioDeviceCatalog = audioDeviceCatalog;
@@ -28,12 +30,13 @@ public partial class SettingsWindow : Window
         this.hotkeyService = hotkeyService;
         this.startupRegistration = startupRegistration;
         this.overlayWindow = overlayWindow;
+        this.transcriptionHistory = transcriptionHistory;
 
         InitializeComponent();
-        Loaded += (_, _) => Populate();
+        Loaded += async (_, _) => await PopulateAsync();
     }
 
-    private void Populate()
+    private async Task PopulateAsync()
     {
         AppSettings settings = settingsStore.Current;
 
@@ -71,6 +74,10 @@ public partial class SettingsWindow : Window
         HotkeyKeyComboBox.SelectedValue = settings.Hotkey.Key;
 
         LaunchOnStartupCheckBox.IsChecked = settings.LaunchOnStartup;
+
+        IReadOnlyList<TranscriptionHistoryEntry> entries = await transcriptionHistory.GetAllAsync(CancellationToken.None);
+        TranscriptionHistoryItems.ItemsSource = entries;
+        EmptyHistoryText.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private async void SaveClicked(object sender, RoutedEventArgs e)
@@ -122,6 +129,15 @@ public partial class SettingsWindow : Window
     private void CancelClicked(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void CopyTranscriptClicked(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button { Tag: TranscriptionHistoryEntry entry } button)
+        {
+            System.Windows.Clipboard.SetText(entry.Text);
+            button.Content = "Copied";
+        }
     }
 }
 

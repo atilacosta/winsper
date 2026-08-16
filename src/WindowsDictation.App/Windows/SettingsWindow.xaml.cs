@@ -14,6 +14,7 @@ public partial class SettingsWindow : Window
     private readonly StartupRegistrationService startupRegistration;
     private readonly OverlayWindow overlayWindow;
     private readonly ITranscriptionHistoryStore transcriptionHistory;
+    private readonly ITroubleshootingService troubleshooting;
 
     public SettingsWindow(
         ISettingsStore settingsStore,
@@ -22,7 +23,8 @@ public partial class SettingsWindow : Window
         GlobalHotkeyService hotkeyService,
         StartupRegistrationService startupRegistration,
         OverlayWindow overlayWindow,
-        ITranscriptionHistoryStore transcriptionHistory)
+        ITranscriptionHistoryStore transcriptionHistory,
+        ITroubleshootingService troubleshooting)
     {
         this.settingsStore = settingsStore;
         this.audioDeviceCatalog = audioDeviceCatalog;
@@ -31,6 +33,7 @@ public partial class SettingsWindow : Window
         this.startupRegistration = startupRegistration;
         this.overlayWindow = overlayWindow;
         this.transcriptionHistory = transcriptionHistory;
+        this.troubleshooting = troubleshooting;
 
         InitializeComponent();
         Loaded += async (_, _) => await PopulateAsync();
@@ -78,6 +81,7 @@ public partial class SettingsWindow : Window
         IReadOnlyList<TranscriptionHistoryEntry> entries = await transcriptionHistory.GetAllAsync(CancellationToken.None);
         TranscriptionHistoryItems.ItemsSource = entries;
         EmptyHistoryText.Visibility = entries.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ShowTroubleshootingIssue();
     }
 
     private async void SaveClicked(object sender, RoutedEventArgs e)
@@ -120,9 +124,10 @@ public partial class SettingsWindow : Window
             overlayWindow.SetPosition(settings.IndicatorPosition);
             Close();
         }
-        catch (Win32Exception exception)
+        catch (Win32Exception)
         {
-            System.Windows.MessageBox.Show(this, exception.Message, "Hotkey Unavailable", MessageBoxButton.OK, MessageBoxImage.Warning);
+            troubleshooting.ReportHotkeyConflict();
+            ShowTroubleshootingIssue();
         }
     }
 
@@ -137,6 +142,18 @@ public partial class SettingsWindow : Window
         {
             System.Windows.Clipboard.SetText(entry.Text);
             button.Content = "Copied";
+        }
+    }
+
+    private void ShowTroubleshootingIssue()
+    {
+        TroubleshootingIssue? issue = troubleshooting.CurrentIssue;
+        TroubleshootingCard.Visibility = issue is null ? Visibility.Collapsed : Visibility.Visible;
+        if (issue is not null)
+        {
+            TroubleshootingTitle.Text = issue.Title;
+            TroubleshootingMessage.Text = issue.Message;
+            TroubleshootingRecovery.Text = issue.Recovery;
         }
     }
 }

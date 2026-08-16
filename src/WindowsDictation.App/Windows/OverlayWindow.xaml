@@ -33,11 +33,8 @@
         </Storyboard>
     </Window.Resources>
 
-    <Grid>
-        <Ellipse x:Name="Shell"
-                 Fill="#D9252528"
-                 Stroke="#45FFFFFF"
-                 StrokeThickness="1" />
+    <Border x:Name="Shell" Background="#E9252528" BorderBrush="#45FFFFFF" BorderThickness="1" CornerRadius="24">
+        <Grid>
         <Ellipse x:Name="StateDot"
                  Width="12"
                  Height="12"
@@ -49,5 +46,7 @@
                 <ScaleTransform x:Name="DotScale" ScaleX="1" ScaleY="1" />
             </Ellipse.RenderTransform>
         </Ellipse>
-    </Grid>
+            <TextBlock x:Name="StatusText" Margin="40,0,14,0" VerticalAlignment="Center" Foreground="White" FontFamily="Segoe UI" FontSize="12" TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+        </Grid>
+    </Border>
 </Window>

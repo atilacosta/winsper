@@ -44,7 +44,9 @@ public partial class App : System.Windows.Application
         overlayWindow.ShowState(RecordingState.Idle, "Ready");
 
         IRecordingController controller = serviceProvider.GetRequiredService<IRecordingController>();
-        controller.StateChanged += (_, args) => Dispatcher.Invoke(() => overlayWindow.ShowState(args.State, args.Message));
+        ITroubleshootingService troubleshooting = serviceProvider.GetRequiredService<ITroubleshootingService>();
+        controller.StateChanged += (_, args) => Dispatcher.Invoke(() =>
+            overlayWindow.ShowState(args.State, troubleshooting.GetOverlayMessage(args.State, args.Message)));
 
         hotkeyService = serviceProvider.GetRequiredService<GlobalHotkeyService>();
         hotkeyService.HotkeyPressed += async (_, _) =>
@@ -69,7 +71,8 @@ public partial class App : System.Windows.Application
         }
         catch (Win32Exception exception)
         {
-            overlayWindow.ShowState(RecordingState.Error, exception.Message);
+            troubleshooting.ReportHotkeyConflict();
+            overlayWindow.ShowState(RecordingState.Error, troubleshooting.GetOverlayMessage(RecordingState.Error, exception.Message));
         }
 
         notifyIcon = CreateNotifyIcon();
@@ -96,6 +99,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<PerformanceMetricsLogger>();
         services.AddSingleton<ISettingsStore, JsonSettingsStore>();
         services.AddSingleton<ITranscriptionHistoryStore, TranscriptionHistoryStore>();
+        services.AddSingleton<ITroubleshootingService, TroubleshootingService>();
         services.AddSingleton<IAppSettingsProvider>(sp => sp.GetRequiredService<ISettingsStore>());
         services.AddSingleton<IAudioCaptureService, WaveInAudioCaptureService>();
         services.AddSingleton<IModelManager, WhisperNetModelManager>();

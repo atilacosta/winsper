@@ -15,7 +15,14 @@ public partial class OverlayWindow : Window
 
     public void ShowState(RecordingState state, string? message)
     {
+        bool showMessage = state == RecordingState.Error;
+        Width = showMessage ? 300 : 42;
+        Height = showMessage ? 48 : 42;
+        StatusText.Visibility = showMessage ? Visibility.Visible : Visibility.Collapsed;
+        StateDot.HorizontalAlignment = showMessage ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Center;
+        StateDot.Margin = showMessage ? new Thickness(14, 0, 0, 0) : new Thickness(0);
         StateDot.Fill = new SolidColorBrush(ColorFor(state));
+        StatusText.Text = showMessage ? message ?? "Dictation couldn't finish. Try again." : string.Empty;
         Opacity = state == RecordingState.Idle ? 0.72 : 0.96;
         ApplyAnimation(state);
 

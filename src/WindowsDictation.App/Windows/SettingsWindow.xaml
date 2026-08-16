@@ -12,7 +12,7 @@
     <Grid Margin="28,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" /><RowDefinition Height="20" /><RowDefinition Height="Auto" />
-            <RowDefinition Height="22" /><RowDefinition Height="*" /><RowDefinition Height="20" /><RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="20" /><RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel>
             <TextBlock Text="Windows Dictation" FontSize="23" FontWeight="SemiBold" />
@@ -35,6 +35,14 @@
                 </StackPanel>
                 <CheckBox x:Name="LaunchOnStartupCheckBox" Grid.Row="6" Grid.ColumnSpan="3" Content="Launch on startup" VerticalAlignment="Center" />
             </Grid>
+        </Border>
+        <Border x:Name="TroubleshootingCard" Grid.Row="3" Margin="0,20,0,0" Background="#FFF8EC" BorderBrush="#F0D7A6" BorderThickness="1" CornerRadius="10" Padding="14" Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="Needs attention" FontSize="12" FontWeight="SemiBold" Foreground="#835A17" />
+                <TextBlock x:Name="TroubleshootingTitle" Margin="0,4,0,0" FontWeight="SemiBold" />
+                <TextBlock x:Name="TroubleshootingMessage" Margin="0,2,0,0" TextWrapping="Wrap" Foreground="#565656" />
+                <TextBlock x:Name="TroubleshootingRecovery" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="#835A17" />
+            </StackPanel>
         </Border>
         <Grid Grid.Row="4">
             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="12" /><RowDefinition Height="*" /></Grid.RowDefinitions>

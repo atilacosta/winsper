@@ -15,6 +15,7 @@ public partial class SettingsWindow : Window
     private readonly OverlayWindow overlayWindow;
     private readonly ITranscriptionHistoryStore transcriptionHistory;
     private readonly ITroubleshootingService troubleshooting;
+    private readonly WhisperNetTranscriptionEngine transcriptionEngine;
 
     public SettingsWindow(
         ISettingsStore settingsStore,
@@ -24,7 +25,8 @@ public partial class SettingsWindow : Window
         StartupRegistrationService startupRegistration,
         OverlayWindow overlayWindow,
         ITranscriptionHistoryStore transcriptionHistory,
-        ITroubleshootingService troubleshooting)
+        ITroubleshootingService troubleshooting,
+        WhisperNetTranscriptionEngine transcriptionEngine)
     {
         this.settingsStore = settingsStore;
         this.audioDeviceCatalog = audioDeviceCatalog;
@@ -34,6 +36,7 @@ public partial class SettingsWindow : Window
         this.overlayWindow = overlayWindow;
         this.transcriptionHistory = transcriptionHistory;
         this.troubleshooting = troubleshooting;
+        this.transcriptionEngine = transcriptionEngine;
 
         InitializeComponent();
         Loaded += async (_, _) => await PopulateAsync();
@@ -77,6 +80,7 @@ public partial class SettingsWindow : Window
         HotkeyKeyComboBox.SelectedValue = settings.Hotkey.Key;
 
         LaunchOnStartupCheckBox.IsChecked = settings.LaunchOnStartup;
+        ShowIndicatorWhenIdleCheckBox.IsChecked = settings.ShowIndicatorWhenIdle;
 
         IReadOnlyList<TranscriptionHistoryEntry> entries = await transcriptionHistory.GetAllAsync(CancellationToken.None);
         TranscriptionHistoryItems.ItemsSource = entries;
@@ -113,6 +117,7 @@ public partial class SettingsWindow : Window
             IndicatorPosition = IndicatorPositionComboBox.SelectedValue is IndicatorPosition position
                 ? position
                 : current.IndicatorPosition,
+            ShowIndicatorWhenIdle = ShowIndicatorWhenIdleCheckBox.IsChecked == true,
             LaunchOnStartup = LaunchOnStartupCheckBox.IsChecked == true
         };
 
@@ -122,6 +127,8 @@ public partial class SettingsWindow : Window
             startupRegistration.Apply(settings.LaunchOnStartup);
             await settingsStore.SaveAsync(settings, CancellationToken.None);
             overlayWindow.SetPosition(settings.IndicatorPosition);
+            overlayWindow.SetShowWhenIdle(settings.ShowIndicatorWhenIdle);
+            overlayWindow.ShowState(RecordingState.Idle, "Ready");
             Close();
         }
         catch (Win32Exception)
@@ -145,10 +152,46 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private async void RetryTroubleshootingClicked(object sender, RoutedEventArgs e)
+    {
+        if (troubleshooting.CurrentIssue?.Action != TroubleshootingAction.RetryModel)
+        {
+            return;
+        }
+
+        ModelKind model = ModelComboBox.SelectedValue is ModelKind selected
+            ? selected
+            : settingsStore.Current.SelectedModel;
+
+        TroubleshootingRetryButton.IsEnabled = false;
+        TroubleshootingRetryButton.Content = "Retrying...";
+        try
+        {
+            await transcriptionEngine.WarmupAsync(model, CancellationToken.None);
+            troubleshooting.Clear();
+            overlayWindow.ShowState(RecordingState.Idle, "Model ready");
+            ShowTroubleshootingIssue();
+        }
+        catch (Exception exception)
+        {
+            overlayWindow.ShowState(RecordingState.Error,
+                troubleshooting.GetOverlayMessage(RecordingState.Error, exception.Message));
+            ShowTroubleshootingIssue();
+        }
+        finally
+        {
+            TroubleshootingRetryButton.IsEnabled = true;
+            TroubleshootingRetryButton.Content = "Try again";
+        }
+    }
+
     private void ShowTroubleshootingIssue()
     {
         TroubleshootingIssue? issue = troubleshooting.CurrentIssue;
         TroubleshootingCard.Visibility = issue is null ? Visibility.Collapsed : Visibility.Visible;
+        TroubleshootingRetryButton.Visibility = issue?.Action == TroubleshootingAction.RetryModel
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         if (issue is not null)
         {
             TroubleshootingTitle.Text = issue.Title;

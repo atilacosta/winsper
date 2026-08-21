@@ -33,7 +33,8 @@
                     <TextBlock Text="Global hotkey" FontWeight="SemiBold" />
                     <DockPanel Margin="0,6,0,0"><ComboBox x:Name="HotkeyKeyComboBox" Width="112" DockPanel.Dock="Right" SelectedValuePath="Content"><ComboBoxItem Content="Space" /><ComboBoxItem Content="F8" /><ComboBoxItem Content="F9" /><ComboBoxItem Content="F10" /><ComboBoxItem Content="F12" /></ComboBox><WrapPanel VerticalAlignment="Center"><CheckBox x:Name="ControlCheckBox" Content="Ctrl" Margin="0,0,16,0" /><CheckBox x:Name="AltCheckBox" Content="Alt" Margin="0,0,16,0" /><CheckBox x:Name="ShiftCheckBox" Content="Shift" Margin="0,0,16,0" /><CheckBox x:Name="WindowsCheckBox" Content="Win" /></WrapPanel></DockPanel>
                 </StackPanel>
-                <CheckBox x:Name="LaunchOnStartupCheckBox" Grid.Row="6" Grid.ColumnSpan="3" Content="Launch on startup" VerticalAlignment="Center" />
+                <CheckBox x:Name="ShowIndicatorWhenIdleCheckBox" Grid.Row="6" Grid.Column="0" Content="Show indicator while idle" VerticalAlignment="Center" />
+                <CheckBox x:Name="LaunchOnStartupCheckBox" Grid.Row="6" Grid.Column="2" Content="Launch on startup" VerticalAlignment="Center" />
             </Grid>
         </Border>
         <Border x:Name="TroubleshootingCard" Grid.Row="3" Margin="0,20,0,0" Background="#FFF8EC" BorderBrush="#F0D7A6" BorderThickness="1" CornerRadius="10" Padding="14" Visibility="Collapsed">
@@ -42,6 +43,7 @@
                 <TextBlock x:Name="TroubleshootingTitle" Margin="0,4,0,0" FontWeight="SemiBold" />
                 <TextBlock x:Name="TroubleshootingMessage" Margin="0,2,0,0" TextWrapping="Wrap" Foreground="#565656" />
                 <TextBlock x:Name="TroubleshootingRecovery" Margin="0,4,0,0" TextWrapping="Wrap" Foreground="#835A17" />
+                <Button x:Name="TroubleshootingRetryButton" Content="Try again" Margin="0,10,0,0" HorizontalAlignment="Left" Visibility="Collapsed" Click="RetryTroubleshootingClicked" />
             </StackPanel>
         </Border>
         <Grid Grid.Row="4">

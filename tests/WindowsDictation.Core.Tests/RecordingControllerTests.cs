@@ -76,6 +76,50 @@ public sealed class RecordingControllerTests
     }
 
     [Fact]
+    public async Task StopAndTranscribeAsync_WhenTranscriptionFails_ClearsErrorAfterDelay()
+    {
+        FakeAudioCapture audio = new();
+        ThrowingTranscriptionEngine transcription = new();
+        RecordingController controller = CreateController(
+            audio,
+            transcription,
+            errorDisplayDuration: TimeSpan.FromMilliseconds(20));
+        TaskCompletionSource cleared = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        controller.StateChanged += (_, args) =>
+        {
+            if (args.State == RecordingState.Idle)
+            {
+                cleared.TrySetResult();
+            }
+        };
+
+        await controller.StartAsync();
+        await controller.StopAndTranscribeAsync();
+        await cleared.Task.WaitAsync(TimeSpan.FromSeconds(1));
+
+        Assert.Equal(RecordingState.Idle, controller.State);
+    }
+
+    [Fact]
+    public async Task StartAsync_DuringErrorDelay_PreventsPendingClearFromResettingRecording()
+    {
+        FakeAudioCapture audio = new();
+        ThrowingTranscriptionEngine transcription = new();
+        RecordingController controller = CreateController(
+            audio,
+            transcription,
+            errorDisplayDuration: TimeSpan.FromMilliseconds(50));
+
+        await controller.StartAsync();
+        await controller.StopAndTranscribeAsync();
+        transcription.Throw = false;
+        await controller.StartAsync();
+        await Task.Delay(100);
+
+        Assert.Equal(RecordingState.Recording, controller.State);
+    }
+
+    [Fact]
     public async Task CancelAsync_WhileRecording_StopsCaptureAndReturnsIdle()
     {
         FakeAudioCapture audio = new();
@@ -93,13 +137,15 @@ public sealed class RecordingControllerTests
         IAudioCaptureService? audio = null,
         ITranscriptionEngine? transcription = null,
         ITextInsertionService? insertion = null,
-        IAppSettingsProvider? settings = null)
+        IAppSettingsProvider? settings = null,
+        TimeSpan? errorDisplayDuration = null)
     {
         return new RecordingController(
             audio ?? new FakeAudioCapture(),
             transcription ?? new FakeTranscriptionEngine("transcript"),
             insertion ?? new FakeTextInsertion(),
-            settings ?? new FakeSettingsProvider());
+            settings ?? new FakeSettingsProvider(),
+            errorDisplayDuration);
     }
 
     private sealed class FakeAudioCapture : IAudioCaptureService

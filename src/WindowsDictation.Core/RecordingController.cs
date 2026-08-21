@@ -2,29 +2,51 @@ namespace WindowsDictation.Core;
 
 public sealed class RecordingController : IRecordingController
 {
+    private static readonly TimeSpan DefaultErrorDisplayDuration = TimeSpan.FromSeconds(5);
+
     private readonly IAudioCaptureService audioCapture;
     private readonly ITranscriptionEngine transcriptionEngine;
     private readonly ITextInsertionService textInsertion;
     private readonly IAppSettingsProvider settingsProvider;
+    private readonly TimeSpan errorDisplayDuration;
     private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly object stateLock = new();
 
     private RecordingState state = RecordingState.Idle;
+    private CancellationTokenSource? errorClearCancellation;
 
     public RecordingController(
         IAudioCaptureService audioCapture,
         ITranscriptionEngine transcriptionEngine,
         ITextInsertionService textInsertion,
-        IAppSettingsProvider settingsProvider)
+        IAppSettingsProvider settingsProvider,
+        TimeSpan? errorDisplayDuration = null)
     {
         this.audioCapture = audioCapture;
         this.transcriptionEngine = transcriptionEngine;
         this.textInsertion = textInsertion;
         this.settingsProvider = settingsProvider;
+        this.errorDisplayDuration = errorDisplayDuration ?? DefaultErrorDisplayDuration;
+        if (this.errorDisplayDuration <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(errorDisplayDuration),
+                "The error display duration must be greater than zero.");
+        }
     }
 
     public event EventHandler<RecordingStateChangedEventArgs>? StateChanged;
 
-    public RecordingState State => state;
+    public RecordingState State
+    {
+        get
+        {
+            lock (stateLock)
+            {
+                return state;
+            }
+        }
+    }
 
     public Task<RecordingResult> ToggleAsync(CancellationToken cancellationToken = default)
     {
@@ -147,7 +169,59 @@ public sealed class RecordingController : IRecordingController
 
     private void SetState(RecordingState nextState, string? message = null)
     {
-        state = nextState;
+        CancellationTokenSource? previousErrorClear;
+        CancellationTokenSource? nextErrorClear = null;
+        CancellationToken nextErrorClearToken = default;
+
+        lock (stateLock)
+        {
+            previousErrorClear = errorClearCancellation;
+            errorClearCancellation = null;
+            state = nextState;
+
+            if (nextState == RecordingState.Error)
+            {
+                nextErrorClear = new CancellationTokenSource();
+                errorClearCancellation = nextErrorClear;
+                nextErrorClearToken = nextErrorClear.Token;
+            }
+        }
+
+        previousErrorClear?.Cancel();
+        previousErrorClear?.Dispose();
         StateChanged?.Invoke(this, new RecordingStateChangedEventArgs(nextState, message));
+
+        if (nextErrorClear is not null)
+        {
+            _ = ClearErrorAfterDelayAsync(nextErrorClear, nextErrorClearToken);
+        }
+    }
+
+    private async Task ClearErrorAfterDelayAsync(
+        CancellationTokenSource cancellation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(errorDisplayDuration, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        lock (stateLock)
+        {
+            if (errorClearCancellation != cancellation || state != RecordingState.Error)
+            {
+                return;
+            }
+
+            errorClearCancellation = null;
+            state = RecordingState.Idle;
+        }
+
+        cancellation.Dispose();
+        StateChanged?.Invoke(this, new RecordingStateChangedEventArgs(RecordingState.Idle, "Ready"));
     }
 }

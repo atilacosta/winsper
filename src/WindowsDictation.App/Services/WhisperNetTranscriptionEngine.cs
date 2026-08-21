@@ -63,6 +63,22 @@ public sealed class WhisperNetTranscriptionEngine : ITranscriptionEngine, IDispo
 
     private async Task<WhisperProcessor> EnsureProcessorAsync(ModelKind model, CancellationToken cancellationToken)
     {
+        try
+        {
+            return await EnsureProcessorCoreAsync(model, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException("Speech model initialization failed.", exception);
+        }
+    }
+
+    private async Task<WhisperProcessor> EnsureProcessorCoreAsync(ModelKind model, CancellationToken cancellationToken)
+    {
         ModelResolution resolution = await modelManager
             .EnsureModelAsync(model, progress: null, cancellationToken)
             .ConfigureAwait(false);

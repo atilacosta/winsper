@@ -7,6 +7,7 @@ namespace WindowsDictation.App.Windows;
 
 public partial class OverlayWindow : Window
 {
+    private bool showWhenIdle = true;
     public OverlayWindow()
     {
         InitializeComponent();
@@ -15,6 +16,12 @@ public partial class OverlayWindow : Window
 
     public void ShowState(RecordingState state, string? message)
     {
+        if (state == RecordingState.Idle && !showWhenIdle)
+        {
+            Hide();
+            return;
+        }
+
         bool showMessage = state == RecordingState.Error;
         Width = showMessage ? 300 : 42;
         Height = showMessage ? 48 : 42;
@@ -38,6 +45,11 @@ public partial class OverlayWindow : Window
     {
         Tag = position;
         PositionIndicator();
+    }
+
+    public void SetShowWhenIdle(bool value)
+    {
+        showWhenIdle = value;
     }
 
     private void PositionIndicator()

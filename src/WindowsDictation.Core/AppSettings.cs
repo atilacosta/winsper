@@ -7,6 +7,7 @@ public sealed class AppSettings
     public ModelKind SelectedModel { get; init; } = ModelKind.TinyEnglish;
     public InsertionMode InsertionMode { get; init; } = InsertionMode.ClipboardPasteThenUnicodeFallback;
     public IndicatorPosition IndicatorPosition { get; init; } = IndicatorPosition.TopCenter;
+    public bool ShowIndicatorWhenIdle { get; init; } = true;
     public bool LaunchOnStartup { get; init; }
 }
 

@@ -2,7 +2,17 @@ using WindowsDictation.Core;
 
 namespace WindowsDictation.App.Services;
 
-public sealed record TroubleshootingIssue(string Title, string Message, string Recovery);
+public enum TroubleshootingAction
+{
+    None,
+    RetryModel
+}
+
+public sealed record TroubleshootingIssue(
+    string Title,
+    string Message,
+    string Recovery,
+    TroubleshootingAction Action = TroubleshootingAction.None);
 
 public interface ITroubleshootingService
 {
@@ -10,6 +20,7 @@ public interface ITroubleshootingService
     event EventHandler? IssueChanged;
     string GetOverlayMessage(RecordingState state, string? technicalMessage);
     void ReportHotkeyConflict();
+    void Clear();
 }
 
 public sealed class TroubleshootingService : ITroubleshootingService
@@ -43,6 +54,12 @@ public sealed class TroubleshootingService : ITroubleshootingService
         IssueChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    public void Clear()
+    {
+        CurrentIssue = null;
+        IssueChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private static TroubleshootingIssue Map(string? technicalMessage)
     {
         string message = technicalMessage ?? string.Empty;
@@ -58,7 +75,11 @@ public sealed class TroubleshootingService : ITroubleshootingService
 
         if (message.Contains("model", StringComparison.OrdinalIgnoreCase) || message.Contains("whisper", StringComparison.OrdinalIgnoreCase) || message.Contains("download", StringComparison.OrdinalIgnoreCase))
         {
-            return new TroubleshootingIssue("Speech model couldn't start", "The selected model could not be loaded.", "Try again or choose a smaller model in Settings.");
+            return new TroubleshootingIssue(
+                "Speech model couldn't start",
+                "The selected model could not be loaded.",
+                "Try again or choose a smaller model in Settings.",
+                TroubleshootingAction.RetryModel);
         }
 
         if (message.Contains("wave", StringComparison.OrdinalIgnoreCase) || message.Contains("device", StringComparison.OrdinalIgnoreCase) || message.Contains("microphone", StringComparison.OrdinalIgnoreCase))

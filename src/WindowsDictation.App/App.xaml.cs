@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using WindowsDictation.App.Services;
@@ -41,6 +42,7 @@ public partial class App : System.Windows.Application
 
         overlayWindow = serviceProvider.GetRequiredService<OverlayWindow>();
         overlayWindow.SetPosition(settingsStore.Current.IndicatorPosition);
+        overlayWindow.SetShowWhenIdle(settingsStore.Current.ShowIndicatorWhenIdle);
         overlayWindow.ShowState(RecordingState.Idle, "Ready");
 
         IRecordingController controller = serviceProvider.GetRequiredService<IRecordingController>();
@@ -103,7 +105,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAppSettingsProvider>(sp => sp.GetRequiredService<ISettingsStore>());
         services.AddSingleton<IAudioCaptureService, WaveInAudioCaptureService>();
         services.AddSingleton<IModelManager, WhisperNetModelManager>();
-        services.AddSingleton<ITranscriptionEngine, WhisperNetTranscriptionEngine>();
+        services.AddSingleton<WhisperNetTranscriptionEngine>();
+        services.AddSingleton<ITranscriptionEngine>(sp => sp.GetRequiredService<WhisperNetTranscriptionEngine>());
         services.AddSingleton<ITextInsertionService, WindowsTextInsertionService>();
         services.AddSingleton<IRecordingController, RecordingController>();
         services.AddSingleton<AudioDeviceCatalog>();
@@ -122,7 +125,7 @@ public partial class App : System.Windows.Application
         Forms.NotifyIcon icon = new()
         {
             Text = "Windows Dictation",
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = new System.Drawing.Icon(Path.Combine(AppContext.BaseDirectory, "Assets", "WindowsDictation.ico")),
             ContextMenuStrip = menu,
             Visible = true
         };
